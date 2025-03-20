@@ -12,6 +12,7 @@ const Calendar: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFallbackNotice, setShowFallbackNotice] = useState<boolean>(false);
 
   // Days of the week for the header
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -24,6 +25,16 @@ const Calendar: React.FC = () => {
       try {
         const allEvents = await fetchAllEvents();
         setEvents(allEvents);
+        
+        // Check if we're using fallback data by looking at event IDs
+        // Fallback data has specific ID patterns like 'lc-weekly-contest' 
+        const hasFallbackData = allEvents.some(event => 
+          event.id.includes('weekly-contest') || 
+          event.id.includes('long-challenge') ||
+          event.id.includes('beginner-contest')
+        );
+        
+        setShowFallbackNotice(hasFallbackData);
       } catch (error) {
         console.error('Error loading events:', error);
         setError('Failed to load events. Please try again later.');
@@ -78,6 +89,13 @@ const Calendar: React.FC = () => {
         prevMonth={prevMonth} 
         nextMonth={nextMonth} 
       />
+      
+      {showFallbackNotice && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
+          <p className="font-medium">Note: Some platform APIs are currently unavailable</p>
+          <p>Some contests shown are sample data. We'll display real data when the APIs are available again.</p>
+        </div>
+      )}
       
       {loading ? (
         <div className="flex flex-col items-center justify-center h-64">
