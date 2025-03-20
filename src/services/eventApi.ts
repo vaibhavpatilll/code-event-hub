@@ -48,8 +48,8 @@ const mockEvents: Event[] = [
   {
     id: "cc-cookoff-1",
     title: "CodeChef Cook-Off",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 1)).setHours(19, 30, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 1)).setHours(22, 0, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(19, 30, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(22, 0, 0, 0)),
     url: "https://www.codechef.com/contests",
     platform: "codechef",
     description: "CodeChef's Cook-Off is a 2.5 hour coding competition held towards the end of the month."
@@ -59,8 +59,8 @@ const mockEvents: Event[] = [
   {
     id: "at-regular-1",
     title: "AtCoder Regular Contest",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 7)).setHours(17, 0, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 7)).setHours(19, 0, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 7)).setHours(17, 0, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 7)).setHours(19, 0, 0, 0)),
     url: "https://atcoder.jp/contests",
     platform: "atcoder",
     description: "AtCoder Regular Contest (ARC) is a rated competition for intermediate programmers (Div. 2)."
@@ -68,8 +68,8 @@ const mockEvents: Event[] = [
   {
     id: "lc-weekly-1",
     title: "LeetCode Weekly Contest",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 7)).setHours(10, 30, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 7)).setHours(12, 30, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 7)).setHours(10, 30, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 7)).setHours(12, 30, 0, 0)),
     url: "https://leetcode.com/contest/",
     platform: "leetcode",
     description: "Put your coding skills to the test in this 90-minute contest featuring 4 algorithmic problems."
@@ -79,8 +79,8 @@ const mockEvents: Event[] = [
   {
     id: "hr-weekofcode-1",
     title: "HackerRank Week of Code",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 14)).setHours(14, 0, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 21)).setHours(14, 0, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 14)).setHours(14, 0, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 21)).setHours(14, 0, 0, 0)),
     url: "https://www.hackerrank.com/contests",
     platform: "hackerrank",
     description: "A week-long coding contest featuring multiple algorithmic challenges."
@@ -88,8 +88,8 @@ const mockEvents: Event[] = [
   {
     id: "gfg-coding-1",
     title: "GeeksforGeeks Coding Contest",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 16)).setHours(20, 0, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 16)).setHours(23, 0, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 16)).setHours(20, 0, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 16)).setHours(23, 0, 0, 0)),
     url: "https://practice.geeksforgeeks.org/contest/",
     platform: "gfg",
     description: "Test your skills with problems ranging from easy to hard in this GFG contest."
@@ -99,8 +99,8 @@ const mockEvents: Event[] = [
   {
     id: "cf-educational-1",
     title: "Educational Codeforces Round",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 21)).setHours(17, 35, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 21)).setHours(19, 35, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 21)).setHours(17, 35, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 21)).setHours(19, 35, 0, 0)),
     url: "https://codeforces.com/contests",
     platform: "codeforces",
     description: "Educational rounds feature problems that teach specific algorithms and techniques."
@@ -110,8 +110,8 @@ const mockEvents: Event[] = [
   {
     id: "job-a-thon-43",
     title: "Job-A-thon 43 Hiring Challenge",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 2)).setHours(8, 0, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 2)).setHours(10, 30, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 2)).setHours(8, 0, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 2)).setHours(10, 30, 0, 0)),
     url: "https://practice.geeksforgeeks.org/contest/",
     platform: "gfg",
     description: "Participate in GFG's hiring contest and get a chance to be interviewed by top companies."
@@ -119,8 +119,8 @@ const mockEvents: Event[] = [
   {
     id: "unique-vision-2025",
     title: "UNIQUE VISION Programming Contest 2025",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 5)).setHours(17, 30, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 5)).setHours(19, 10, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 5)).setHours(17, 30, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 5)).setHours(19, 10, 0, 0)),
     url: "https://atcoder.jp/contests",
     platform: "atcoder",
     description: "UNIQUE VISION sponsors this programming contest on the AtCoder platform."
@@ -128,8 +128,8 @@ const mockEvents: Event[] = [
   {
     id: "starters-175",
     title: "Starters 175",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 10)).setHours(20, 0, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 10)).setHours(23, 0, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 10)).setHours(20, 0, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 10)).setHours(23, 0, 0, 0)),
     url: "https://www.codechef.com/contests",
     platform: "codechef",
     description: "CodeChef Starters is a rated contest for programmers of all levels."
@@ -137,8 +137,8 @@ const mockEvents: Event[] = [
   {
     id: "weekly-contest-442",
     title: "Weekly Contest 442",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 12)).setHours(8, 0, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 12)).setHours(9, 30, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 12)).setHours(8, 0, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 12)).setHours(9, 30, 0, 0)),
     url: "https://leetcode.com/contest/",
     platform: "leetcode",
     description: "Join LeetCode's weekly coding competition featuring 4 algorithmic challenges."
@@ -146,8 +146,8 @@ const mockEvents: Event[] = [
   {
     id: "omron-contest",
     title: "OMRON Programming Contest 2024",
-    startTime: new Date(new Date().setDate(new Date().getDate() + 18)).setHours(13, 0, 0, 0),
-    endTime: new Date(new Date().setDate(new Date().getDate() + 18)).setHours(15, 0, 0, 0),
+    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 18)).setHours(13, 0, 0, 0)),
+    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 18)).setHours(15, 0, 0, 0)),
     url: "https://atcoder.jp/contests",
     platform: "atcoder",
     description: "Sponsored by OMRON, this contest features interesting problems based on industrial applications."
@@ -237,3 +237,4 @@ export const fetchUpcomingEvents = async (days: number = 7): Promise<Event[]> =>
 // };
 
 // Similar implementations would be needed for other platforms
+
