@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 
+// Event interface
 export interface Event {
   id: string;
   title: string;
@@ -17,150 +18,177 @@ const parseDuration = (duration: string): number => {
   return (hours * 60 + minutes) * 60 * 1000;
 };
 
-// Helper to create a date from a string in ISO format
-const createDate = (dateStr: string): Date => {
+// Create a date from a string in ISO format or timestamp
+const createDate = (dateStr: string | number): Date => {
   return new Date(dateStr);
 };
 
-// Mock data - in a real app, this would come from API calls
-const mockEvents: Event[] = [
-  // Today
-  {
-    id: "cf-div2-1",
-    title: "Codeforces Round (Div. 2)",
-    startTime: new Date(new Date().setHours(20, 0, 0, 0)),
-    endTime: new Date(new Date().setHours(22, 0, 0, 0)),
-    url: "https://codeforces.com/contests",
-    platform: "codeforces",
-    description: "Participate in Codeforces Round (Div. 2) and compete globally with programmers around the world."
-  },
-  {
-    id: "lc-biweekly-1",
-    title: "LeetCode Biweekly Contest",
-    startTime: new Date(new Date().setHours(21, 30, 0, 0)),
-    endTime: new Date(new Date().setHours(23, 30, 0, 0)),
-    url: "https://leetcode.com/contest/",
-    platform: "leetcode",
-    description: "Solve algorithmic problems in LeetCode's Biweekly Contest and improve your problem-solving skills."
-  },
-  
-  // Tomorrow
-  {
-    id: "cc-cookoff-1",
-    title: "CodeChef Cook-Off",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(19, 30, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(22, 0, 0, 0)),
-    url: "https://www.codechef.com/contests",
-    platform: "codechef",
-    description: "CodeChef's Cook-Off is a 2.5 hour coding competition held towards the end of the month."
-  },
-  
-  // Next week
-  {
-    id: "at-regular-1",
-    title: "AtCoder Regular Contest",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 7)).setHours(17, 0, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 7)).setHours(19, 0, 0, 0)),
-    url: "https://atcoder.jp/contests",
-    platform: "atcoder",
-    description: "AtCoder Regular Contest (ARC) is a rated competition for intermediate programmers (Div. 2)."
-  },
-  {
-    id: "lc-weekly-1",
-    title: "LeetCode Weekly Contest",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 7)).setHours(10, 30, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 7)).setHours(12, 30, 0, 0)),
-    url: "https://leetcode.com/contest/",
-    platform: "leetcode",
-    description: "Put your coding skills to the test in this 90-minute contest featuring 4 algorithmic problems."
-  },
-  
-  // Two weeks from now
-  {
-    id: "hr-weekofcode-1",
-    title: "HackerRank Week of Code",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 14)).setHours(14, 0, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 21)).setHours(14, 0, 0, 0)),
-    url: "https://www.hackerrank.com/contests",
-    platform: "hackerrank",
-    description: "A week-long coding contest featuring multiple algorithmic challenges."
-  },
-  {
-    id: "gfg-coding-1",
-    title: "GeeksforGeeks Coding Contest",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 16)).setHours(20, 0, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 16)).setHours(23, 0, 0, 0)),
-    url: "https://practice.geeksforgeeks.org/contest/",
-    platform: "gfg",
-    description: "Test your skills with problems ranging from easy to hard in this GFG contest."
-  },
-  
-  // Three weeks from now
-  {
-    id: "cf-educational-1",
-    title: "Educational Codeforces Round",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 21)).setHours(17, 35, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 21)).setHours(19, 35, 0, 0)),
-    url: "https://codeforces.com/contests",
-    platform: "codeforces",
-    description: "Educational rounds feature problems that teach specific algorithms and techniques."
-  },
-  
-  // Current month various events
-  {
-    id: "job-a-thon-43",
-    title: "Job-A-thon 43 Hiring Challenge",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 2)).setHours(8, 0, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 2)).setHours(10, 30, 0, 0)),
-    url: "https://practice.geeksforgeeks.org/contest/",
-    platform: "gfg",
-    description: "Participate in GFG's hiring contest and get a chance to be interviewed by top companies."
-  },
-  {
-    id: "unique-vision-2025",
-    title: "UNIQUE VISION Programming Contest 2025",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 5)).setHours(17, 30, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 5)).setHours(19, 10, 0, 0)),
-    url: "https://atcoder.jp/contests",
-    platform: "atcoder",
-    description: "UNIQUE VISION sponsors this programming contest on the AtCoder platform."
-  },
-  {
-    id: "starters-175",
-    title: "Starters 175",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 10)).setHours(20, 0, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 10)).setHours(23, 0, 0, 0)),
-    url: "https://www.codechef.com/contests",
-    platform: "codechef",
-    description: "CodeChef Starters is a rated contest for programmers of all levels."
-  },
-  {
-    id: "weekly-contest-442",
-    title: "Weekly Contest 442",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 12)).setHours(8, 0, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 12)).setHours(9, 30, 0, 0)),
-    url: "https://leetcode.com/contest/",
-    platform: "leetcode",
-    description: "Join LeetCode's weekly coding competition featuring 4 algorithmic challenges."
-  },
-  {
-    id: "omron-contest",
-    title: "OMRON Programming Contest 2024",
-    startTime: new Date(new Date(new Date().setDate(new Date().getDate() + 18)).setHours(13, 0, 0, 0)),
-    endTime: new Date(new Date(new Date().setDate(new Date().getDate() + 18)).setHours(15, 0, 0, 0)),
-    url: "https://atcoder.jp/contests",
-    platform: "atcoder",
-    description: "Sponsored by OMRON, this contest features interesting problems based on industrial applications."
-  },
-  // Add more mock events to cover a full month
-];
+// Codeforces API calls
+const fetchCodeforcesEvents = async (): Promise<Event[]> => {
+  try {
+    const response = await fetch('https://codeforces.com/api/contest.list');
+    const data = await response.json();
+    
+    if (data.status === 'OK') {
+      return data.result
+        .filter((contest: any) => contest.phase === 'BEFORE')
+        .map((contest: any) => ({
+          id: `cf-${contest.id}`,
+          title: contest.name,
+          startTime: new Date(contest.startTimeSeconds * 1000),
+          endTime: new Date((contest.startTimeSeconds + contest.durationSeconds) * 1000),
+          url: `https://codeforces.com/contests/${contest.id}`,
+          platform: 'codeforces',
+          description: `Codeforces contest with duration of ${Math.floor(contest.durationSeconds / 3600)} hours.`
+        }));
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching Codeforces events:", error);
+    return [];
+  }
+};
+
+// LeetCode API calls (using Kontests API as proxy since LeetCode doesn't have a public API)
+const fetchLeetCodeEvents = async (): Promise<Event[]> => {
+  try {
+    const response = await fetch('https://kontests.net/api/v1/leet_code');
+    const contests = await response.json();
+    
+    return contests.map((contest: any) => ({
+      id: `lc-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+      title: contest.name,
+      startTime: new Date(contest.start_time),
+      endTime: new Date(contest.end_time),
+      url: contest.url,
+      platform: 'leetcode',
+      description: `LeetCode contest with duration of ${contest.duration}.`
+    }));
+  } catch (error) {
+    console.error("Error fetching LeetCode events:", error);
+    return [];
+  }
+};
+
+// CodeChef API calls (using Kontests API)
+const fetchCodeChefEvents = async (): Promise<Event[]> => {
+  try {
+    const response = await fetch('https://kontests.net/api/v1/code_chef');
+    const contests = await response.json();
+    
+    return contests.map((contest: any) => ({
+      id: `cc-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+      title: contest.name,
+      startTime: new Date(contest.start_time),
+      endTime: new Date(contest.end_time),
+      url: contest.url,
+      platform: 'codechef',
+      description: `CodeChef contest with a duration of ${contest.duration}.`
+    }));
+  } catch (error) {
+    console.error("Error fetching CodeChef events:", error);
+    return [];
+  }
+};
+
+// AtCoder API calls (using Kontests API)
+const fetchAtCoderEvents = async (): Promise<Event[]> => {
+  try {
+    const response = await fetch('https://kontests.net/api/v1/at_coder');
+    const contests = await response.json();
+    
+    return contests.map((contest: any) => ({
+      id: `ac-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+      title: contest.name,
+      startTime: new Date(contest.start_time),
+      endTime: new Date(contest.end_time),
+      url: contest.url,
+      platform: 'atcoder',
+      description: `AtCoder contest with a duration of ${contest.duration}.`
+    }));
+  } catch (error) {
+    console.error("Error fetching AtCoder events:", error);
+    return [];
+  }
+};
+
+// HackerRank API calls (using Kontests API)
+const fetchHackerRankEvents = async (): Promise<Event[]> => {
+  try {
+    const response = await fetch('https://kontests.net/api/v1/hacker_rank');
+    const contests = await response.json();
+    
+    return contests.map((contest: any) => ({
+      id: `hr-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+      title: contest.name,
+      startTime: new Date(contest.start_time),
+      endTime: new Date(contest.end_time),
+      url: contest.url,
+      platform: 'hackerrank',
+      description: `HackerRank contest with a duration of ${contest.duration}.`
+    }));
+  } catch (error) {
+    console.error("Error fetching HackerRank events:", error);
+    return [];
+  }
+};
+
+// GeeksforGeeks API calls (using Kontests API)
+const fetchGFGEvents = async (): Promise<Event[]> => {
+  try {
+    // For GFG, we might need to filter from a general list
+    const response = await fetch('https://kontests.net/api/v1/all');
+    const contests = await response.json();
+    
+    return contests
+      .filter((contest: any) => contest.site === "GeeksforGeeks")
+      .map((contest: any) => ({
+        id: `gfg-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+        title: contest.name,
+        startTime: new Date(contest.start_time),
+        endTime: new Date(contest.end_time),
+        url: contest.url,
+        platform: 'gfg',
+        description: `GeeksforGeeks contest with a duration of ${contest.duration}.`
+      }));
+  } catch (error) {
+    console.error("Error fetching GFG events:", error);
+    return [];
+  }
+};
 
 // API to fetch events from all platforms
 export const fetchAllEvents = async (): Promise<Event[]> => {
   try {
-    // In a real app, you would make API calls to different platforms here
-    // For now, we'll return mock data
-    return mockEvents;
+    toast.info("Fetching contests from all platforms...");
+    
+    // Run all API calls in parallel for better performance
+    const results = await Promise.allSettled([
+      fetchCodeforcesEvents(),
+      fetchLeetCodeEvents(),
+      fetchCodeChefEvents(),
+      fetchAtCoderEvents(),
+      fetchHackerRankEvents(),
+      fetchGFGEvents()
+    ]);
+    
+    // Process the results and combine all events
+    let allEvents: Event[] = [];
+    
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        allEvents = [...allEvents, ...result.value];
+      } else {
+        // Log the error but don't fail the entire operation
+        const platforms = ['Codeforces', 'LeetCode', 'CodeChef', 'AtCoder', 'HackerRank', 'GeeksforGeeks'];
+        console.error(`Error fetching data from ${platforms[index]}:`, result.reason);
+      }
+    });
+    
+    // Sort all events by start time
+    allEvents.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    
+    return allEvents;
   } catch (error) {
     console.error("Error fetching events:", error);
     toast.error("Failed to fetch events. Please try again later.");
@@ -171,9 +199,34 @@ export const fetchAllEvents = async (): Promise<Event[]> => {
 // API to fetch events from a specific platform
 export const fetchPlatformEvents = async (platform: string): Promise<Event[]> => {
   try {
-    // In a real app, you would make an API call to the specific platform
-    // For now, we'll filter the mock data
-    return mockEvents.filter(event => event.platform === platform);
+    toast.info(`Fetching ${platform} contests...`);
+    
+    let events: Event[] = [];
+    
+    switch (platform) {
+      case 'codeforces':
+        events = await fetchCodeforcesEvents();
+        break;
+      case 'leetcode':
+        events = await fetchLeetCodeEvents();
+        break;
+      case 'codechef':
+        events = await fetchCodeChefEvents();
+        break;
+      case 'atcoder':
+        events = await fetchAtCoderEvents();
+        break;
+      case 'hackerrank':
+        events = await fetchHackerRankEvents();
+        break;
+      case 'gfg':
+        events = await fetchGFGEvents();
+        break;
+      default:
+        throw new Error(`Unsupported platform: ${platform}`);
+    }
+    
+    return events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   } catch (error) {
     console.error(`Error fetching ${platform} events:`, error);
     toast.error(`Failed to fetch ${platform} events. Please try again later.`);
@@ -184,11 +237,13 @@ export const fetchPlatformEvents = async (platform: string): Promise<Event[]> =>
 // Fetch upcoming events for today and next few days
 export const fetchUpcomingEvents = async (days: number = 7): Promise<Event[]> => {
   try {
+    const allEvents = await fetchAllEvents();
+    
     const now = new Date();
     const futureDate = new Date();
     futureDate.setDate(now.getDate() + days);
     
-    return mockEvents.filter(event => {
+    return allEvents.filter(event => {
       return event.startTime >= now && event.startTime <= futureDate;
     }).sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   } catch (error) {
@@ -197,44 +252,3 @@ export const fetchUpcomingEvents = async (days: number = 7): Promise<Event[]> =>
     return [];
   }
 };
-
-// In a production environment, you would implement actual API calls to the respective platforms
-// For example:
-
-// 1. For Codeforces:
-// const fetchCodeforcesEvents = async (): Promise<Event[]> => {
-//   const response = await fetch('https://codeforces.com/api/contest.list');
-//   const data = await response.json();
-//   
-//   if (data.status === 'OK') {
-//     return data.result
-//       .filter(contest => contest.phase === 'BEFORE')
-//       .map(contest => ({
-//         id: `cf-${contest.id}`,
-//         title: contest.name,
-//         startTime: new Date(contest.startTimeSeconds * 1000),
-//         endTime: new Date((contest.startTimeSeconds + contest.durationSeconds) * 1000),
-//         url: `https://codeforces.com/contests/${contest.id}`,
-//         platform: 'codeforces'
-//       }));
-//   }
-//   return [];
-// };
-
-// 2. For LeetCode (would need a proxy server as they don't have a public API):
-// const fetchLeetCodeEvents = async (): Promise<Event[]> => {
-//   const response = await fetch('https://your-proxy-server.com/leetcode/contests');
-//   const data = await response.json();
-//   
-//   return data.map(contest => ({
-//     id: `lc-${contest.id}`,
-//     title: contest.title,
-//     startTime: new Date(contest.startTime),
-//     endTime: new Date(contest.endTime),
-//     url: `https://leetcode.com/contest/${contest.titleSlug}`,
-//     platform: 'leetcode'
-//   }));
-// };
-
-// Similar implementations would be needed for other platforms
-
