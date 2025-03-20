@@ -6,7 +6,8 @@ import SearchBar from '@/components/SearchBar';
 import PlatformFilter from '@/components/PlatformFilter';
 import { Event, fetchAllEvents } from '@/services/eventApi';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +23,8 @@ const Index = () => {
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFallbackNotice, setShowFallbackNotice] = useState<boolean>(false);
+  const [platformsUsingFallback, setPlatformsUsingFallback] = useState<string[]>([]);
 
   // Fetch all events when the component mounts
   useEffect(() => {
@@ -29,10 +32,18 @@ const Index = () => {
       setLoading(true);
       setError(null);
       try {
-        const events = await fetchAllEvents();
-        setAllEvents(events);
-        setFilteredEvents(events);
-        toast.success(`Loaded ${events.length} contests from all platforms`);
+        const result = await fetchAllEvents();
+        setAllEvents(result.events);
+        setFilteredEvents(result.events);
+        setShowFallbackNotice(result.usingFallback);
+        setPlatformsUsingFallback(result.platformsUsingFallback);
+        
+        toast.success(`Loaded ${result.events.length} contests from all platforms`);
+        
+        if (result.usingFallback) {
+          const platformNames = result.platformsUsingFallback.map(getPlatformDisplayName).join(', ');
+          toast.info(`Using demo data for: ${platformNames}`);
+        }
       } catch (error) {
         console.error('Error loading events:', error);
         setError('Failed to load events. Please try refreshing the page.');
@@ -79,10 +90,18 @@ const Index = () => {
     setLoading(true);
     setError(null);
     try {
-      const events = await fetchAllEvents();
-      setAllEvents(events);
-      setFilteredEvents(events);
+      const result = await fetchAllEvents();
+      setAllEvents(result.events);
+      setFilteredEvents(result.events);
+      setShowFallbackNotice(result.usingFallback);
+      setPlatformsUsingFallback(result.platformsUsingFallback);
+      
       toast.success('Successfully refreshed contests data');
+      
+      if (result.usingFallback) {
+        const platformNames = result.platformsUsingFallback.map(getPlatformDisplayName).join(', ');
+        toast.info(`Using demo data for: ${platformNames}`);
+      }
     } catch (error) {
       console.error('Error refreshing events:', error);
       setError('Failed to refresh events data');
@@ -92,6 +111,18 @@ const Index = () => {
     }
   };
 
+  const getPlatformDisplayName = (id: string): string => {
+    const platformMap: Record<string, string> = {
+      'leetcode': 'LeetCode',
+      'codeforces': 'Codeforces',
+      'codechef': 'CodeChef',
+      'atcoder': 'AtCoder',
+      'hackerrank': 'HackerRank',
+      'gfg': 'GeeksforGeeks'
+    };
+    return platformMap[id] || id;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto pt-8 pb-16 px-4">
@@ -99,6 +130,29 @@ const Index = () => {
           <h1 className="text-3xl font-bold text-gray-900">Coding Contest Calendar</h1>
           <p className="text-gray-600 mt-2">Track upcoming contests from all major coding platforms</p>
         </header>
+        
+        {showFallbackNotice && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Some platform APIs are currently unavailable</p>
+                <p className="text-sm mt-1">Using sample data for: {platformsUsingFallback.map(getPlatformDisplayName).join(', ')}</p>
+                <p className="text-xs mt-1">Note: Some coding platforms block API requests from browsers due to CORS restrictions. For fully functional production use, you would need a backend proxy.</p>
+                <div className="mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRefresh} 
+                    className="text-sm"
+                  >
+                    Retry API Calls
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left Sidebar - Upcoming Events */}
@@ -117,25 +171,7 @@ const Index = () => {
                 />
               </div>
               
-              {loading ? (
-                <div className="flex flex-col items-center justify-center h-96">
-                  <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
-                  <p className="text-xl text-gray-600">Loading contests from all platforms...</p>
-                  <p className="text-sm text-gray-500 mt-2">This may take a moment</p>
-                </div>
-              ) : error ? (
-                <div className="flex flex-col items-center justify-center h-96">
-                  <p className="text-xl text-red-500 mb-4">{error}</p>
-                  <button 
-                    onClick={handleRefresh} 
-                    className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-                  >
-                    Refresh
-                  </button>
-                </div>
-              ) : (
-                <Calendar />
-              )}
+              <Calendar />
             </div>
           </div>
         </div>

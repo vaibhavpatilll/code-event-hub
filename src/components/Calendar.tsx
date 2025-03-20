@@ -5,7 +5,8 @@ import { Event, fetchAllEvents } from '@/services/eventApi';
 import CalendarHeader from './CalendarHeader';
 import EventItem from './EventItem';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Calendar: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
@@ -13,6 +14,7 @@ const Calendar: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showFallbackNotice, setShowFallbackNotice] = useState<boolean>(false);
+  const [platformsWithFallbackData, setPlatformsWithFallbackData] = useState<string[]>([]);
 
   // Days of the week for the header
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -23,18 +25,15 @@ const Calendar: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const allEvents = await fetchAllEvents();
-        setEvents(allEvents);
+        const fetchResult = await fetchAllEvents();
+        setEvents(fetchResult.events);
         
-        // Check if we're using fallback data by looking at event IDs
-        // Fallback data has specific ID patterns like 'lc-weekly-contest' 
-        const hasFallbackData = allEvents.some(event => 
-          event.id.includes('weekly-contest') || 
-          event.id.includes('long-challenge') ||
-          event.id.includes('beginner-contest')
-        );
+        // Check if we're using fallback data and which platforms are affected
+        setShowFallbackNotice(fetchResult.usingFallback);
+        setPlatformsWithFallbackData(fetchResult.platformsUsingFallback || []);
         
-        setShowFallbackNotice(hasFallbackData);
+        console.log('Calendar loaded events:', fetchResult.events.length);
+        console.log('Using fallback data for platforms:', fetchResult.platformsUsingFallback);
       } catch (error) {
         console.error('Error loading events:', error);
         setError('Failed to load events. Please try again later.');
@@ -65,6 +64,25 @@ const Calendar: React.FC = () => {
     });
   };
 
+  // Refresh events
+  const handleRefresh = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const fetchResult = await fetchAllEvents();
+      setEvents(fetchResult.events);
+      setShowFallbackNotice(fetchResult.usingFallback);
+      setPlatformsWithFallbackData(fetchResult.platformsUsingFallback || []);
+      toast.success('Successfully refreshed calendar data');
+    } catch (error) {
+      console.error('Error refreshing events:', error);
+      setError('Failed to refresh events data');
+      toast.error('Failed to refresh events data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Get all days in the current month
   const days = getDaysInMonth(currentMonth);
 
@@ -82,6 +100,18 @@ const Calendar: React.FC = () => {
     return eventStartMonth === currentMonthNumber && eventStartYear === currentYear;
   });
 
+  const getPlatformDisplayName = (id: string): string => {
+    const platformMap: Record<string, string> = {
+      'leetcode': 'LeetCode',
+      'codeforces': 'Codeforces',
+      'codechef': 'CodeChef',
+      'atcoder': 'AtCoder',
+      'hackerrank': 'HackerRank',
+      'gfg': 'GeeksforGeeks'
+    };
+    return platformMap[id] || id;
+  };
+
   return (
     <div className="calendar-container">
       <CalendarHeader 
@@ -91,9 +121,24 @@ const Calendar: React.FC = () => {
       />
       
       {showFallbackNotice && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
-          <p className="font-medium">Note: Some platform APIs are currently unavailable</p>
-          <p>Some contests shown are sample data. We'll display real data when the APIs are available again.</p>
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium">Some platform APIs are currently unavailable</p>
+              <p className="text-sm mt-1">Using sample data for: {platformsWithFallbackData.map(getPlatformDisplayName).join(', ')}</p>
+              <div className="mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRefresh} 
+                  className="text-sm"
+                >
+                  Retry API Calls
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
       
@@ -105,12 +150,12 @@ const Calendar: React.FC = () => {
       ) : error ? (
         <div className="flex flex-col items-center justify-center h-64">
           <p className="text-lg text-red-500">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <Button 
+            onClick={handleRefresh} 
             className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
           >
             Retry
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-7 text-center calendar-days">

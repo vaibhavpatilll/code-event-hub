@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Event, fetchUpcomingEvents } from '@/services/eventApi';
 import { formatDateDashed, formatTimeRange, formatEventDate } from '@/utils/dateUtils';
-import { Calendar, Clock, ExternalLink, Loader2 } from 'lucide-react';
+import { Calendar, Clock, ExternalLink, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -10,6 +10,7 @@ const UpcomingEvents: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [usingFallbackData, setUsingFallbackData] = useState<boolean>(false);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -18,6 +19,15 @@ const UpcomingEvents: React.FC = () => {
       try {
         const upcomingEvents = await fetchUpcomingEvents(14); // Get events for the next 14 days
         setEvents(upcomingEvents);
+        
+        // Check if we're using fallback data
+        const hasFallbackData = upcomingEvents.some(event => 
+          event.id.includes('weekly-contest') || 
+          event.id.includes('long-challenge') ||
+          event.id.includes('beginner-contest')
+        );
+        
+        setUsingFallbackData(hasFallbackData);
       } catch (error) {
         console.error('Error loading upcoming events:', error);
         setError('Failed to load upcoming events');
@@ -56,10 +66,55 @@ const UpcomingEvents: React.FC = () => {
     groupedEvents[dateKey].push(event);
   });
 
+  // Refresh events
+  const handleRefresh = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const upcomingEvents = await fetchUpcomingEvents(14);
+      setEvents(upcomingEvents);
+      
+      // Check if we're using fallback data
+      const hasFallbackData = upcomingEvents.some(event => 
+        event.id.includes('weekly-contest') || 
+        event.id.includes('long-challenge') ||
+        event.id.includes('beginner-contest')
+      );
+      
+      setUsingFallbackData(hasFallbackData);
+      toast.success('Successfully refreshed upcoming contests');
+    } catch (error) {
+      console.error('Error refreshing upcoming events:', error);
+      setError('Failed to refresh upcoming events');
+      toast.error('Failed to refresh upcoming events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="upcoming-events-container bg-gray-50 p-4 rounded-lg">
-      <h2 className="text-xl font-semibold mb-2">Upcoming Contests</h2>
-      <p className="text-sm text-gray-500 mb-4">Don't miss scheduled events</p>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-xl font-semibold">Upcoming Contests</h2>
+          <p className="text-sm text-gray-500">Next 14 days</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleRefresh}
+          className="text-xs"
+        >
+          Refresh
+        </Button>
+      </div>
+      
+      {usingFallbackData && (
+        <div className="mb-4 p-2 bg-yellow-50 border border-yellow-100 rounded text-yellow-800 text-xs flex items-start gap-1.5">
+          <AlertTriangle className="h-3.5 w-3.5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <span>Using demo data for some platforms</span>
+        </div>
+      )}
       
       {loading ? (
         <div className="flex flex-col items-center justify-center h-64">
@@ -70,7 +125,7 @@ const UpcomingEvents: React.FC = () => {
         <div className="text-center py-8">
           <p className="text-red-500 mb-2">{error}</p>
           <Button 
-            onClick={() => window.location.reload()} 
+            onClick={handleRefresh} 
             variant="outline" 
             size="sm"
           >

@@ -12,6 +12,13 @@ export interface Event {
   description?: string;
 }
 
+// API response with metadata
+export interface ApiResponse {
+  events: Event[];
+  usingFallback: boolean;
+  platformsUsingFallback: string[];
+}
+
 // Helper function to parse the duration from string like "01:30" to milliseconds
 const parseDuration = (duration: string): number => {
   const [hours, minutes] = duration.split(':').map(Number);
@@ -135,40 +142,75 @@ const getFallbackEvents = (platform: string): Event[] => {
           description: 'GeeksforGeeks contest with problems commonly asked in technical interviews.'
         }
       ];
+    case 'codeforces':
+      return [
+        {
+          id: 'cf-div2-contest',
+          title: 'Codeforces Round #800 (Div. 2)',
+          startTime: new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000), // 1 day from now
+          endTime: new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 hours duration
+          url: 'https://codeforces.com/contests',
+          platform: 'codeforces',
+          description: 'Codeforces Round with problems of varying difficulty.'
+        },
+        {
+          id: 'cf-educational-round',
+          title: 'Educational Codeforces Round #147',
+          startTime: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000), // 6 days from now
+          endTime: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 hours duration
+          url: 'https://codeforces.com/contests',
+          platform: 'codeforces',
+          description: 'Educational round with problems designed to teach specific algorithms and techniques.'
+        }
+      ];
     default:
       return [];
   }
 };
 
 // Codeforces API calls
-const fetchCodeforcesEvents = async (): Promise<Event[]> => {
+const fetchCodeforcesEvents = async (): Promise<{ events: Event[], usingFallback: boolean }> => {
   try {
-    const response = await fetch('https://codeforces.com/api/contest.list');
+    // Use CORS proxy for Codeforces API to avoid CORS issues
+    const response = await fetch('https://codeforces.com/api/contest.list', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Codeforces API responded with status: ${response.status}`);
+    }
+    
     const data = await response.json();
     
     if (data.status === 'OK') {
-      return data.result
-        .filter((contest: any) => contest.phase === 'BEFORE')
-        .map((contest: any) => ({
-          id: `cf-${contest.id}`,
-          title: contest.name,
-          startTime: new Date(contest.startTimeSeconds * 1000),
-          endTime: new Date((contest.startTimeSeconds + contest.durationSeconds) * 1000),
-          url: `https://codeforces.com/contests/${contest.id}`,
-          platform: 'codeforces',
-          description: `Codeforces contest with duration of ${Math.floor(contest.durationSeconds / 3600)} hours.`
-        }));
+      return {
+        events: data.result
+          .filter((contest: any) => contest.phase === 'BEFORE')
+          .map((contest: any) => ({
+            id: `cf-${contest.id}`,
+            title: contest.name,
+            startTime: new Date(contest.startTimeSeconds * 1000),
+            endTime: new Date((contest.startTimeSeconds + contest.durationSeconds) * 1000),
+            url: `https://codeforces.com/contests/${contest.id}`,
+            platform: 'codeforces',
+            description: `Codeforces contest with duration of ${Math.floor(contest.durationSeconds / 3600)} hours.`
+          })),
+        usingFallback: false
+      };
     }
     console.error("Error in Codeforces API response: Status not OK");
-    return getFallbackEvents('codeforces');
+    return { events: getFallbackEvents('codeforces'), usingFallback: true };
   } catch (error) {
     console.error("Error fetching Codeforces events:", error);
-    return getFallbackEvents('codeforces');
+    return { events: getFallbackEvents('codeforces'), usingFallback: true };
   }
 };
 
-// LeetCode API calls (using Kontests API as proxy since LeetCode doesn't have a public API)
-const fetchLeetCodeEvents = async (): Promise<Event[]> => {
+// LeetCode API calls (using Kontests API)
+const fetchLeetCodeEvents = async (): Promise<{ events: Event[], usingFallback: boolean }> => {
   try {
     const response = await fetch('https://kontests.net/api/v1/leet_code');
     if (!response.ok) {
@@ -176,23 +218,26 @@ const fetchLeetCodeEvents = async (): Promise<Event[]> => {
     }
     const contests = await response.json();
     
-    return contests.map((contest: any) => ({
-      id: `lc-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
-      title: contest.name,
-      startTime: new Date(contest.start_time),
-      endTime: new Date(contest.end_time),
-      url: contest.url,
-      platform: 'leetcode',
-      description: `LeetCode contest with duration of ${contest.duration}.`
-    }));
+    return {
+      events: contests.map((contest: any) => ({
+        id: `lc-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+        title: contest.name,
+        startTime: new Date(contest.start_time),
+        endTime: new Date(contest.end_time),
+        url: contest.url,
+        platform: 'leetcode',
+        description: `LeetCode contest with duration of ${contest.duration}.`
+      })),
+      usingFallback: false
+    };
   } catch (error) {
     console.error("Error fetching LeetCode events:", error);
-    return getFallbackEvents('leetcode');
+    return { events: getFallbackEvents('leetcode'), usingFallback: true };
   }
 };
 
 // CodeChef API calls (using Kontests API)
-const fetchCodeChefEvents = async (): Promise<Event[]> => {
+const fetchCodeChefEvents = async (): Promise<{ events: Event[], usingFallback: boolean }> => {
   try {
     const response = await fetch('https://kontests.net/api/v1/code_chef');
     if (!response.ok) {
@@ -200,23 +245,26 @@ const fetchCodeChefEvents = async (): Promise<Event[]> => {
     }
     const contests = await response.json();
     
-    return contests.map((contest: any) => ({
-      id: `cc-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
-      title: contest.name,
-      startTime: new Date(contest.start_time),
-      endTime: new Date(contest.end_time),
-      url: contest.url,
-      platform: 'codechef',
-      description: `CodeChef contest with a duration of ${contest.duration}.`
-    }));
+    return {
+      events: contests.map((contest: any) => ({
+        id: `cc-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+        title: contest.name,
+        startTime: new Date(contest.start_time),
+        endTime: new Date(contest.end_time),
+        url: contest.url,
+        platform: 'codechef',
+        description: `CodeChef contest with a duration of ${contest.duration}.`
+      })),
+      usingFallback: false
+    };
   } catch (error) {
     console.error("Error fetching CodeChef events:", error);
-    return getFallbackEvents('codechef');
+    return { events: getFallbackEvents('codechef'), usingFallback: true };
   }
 };
 
 // AtCoder API calls (using Kontests API)
-const fetchAtCoderEvents = async (): Promise<Event[]> => {
+const fetchAtCoderEvents = async (): Promise<{ events: Event[], usingFallback: boolean }> => {
   try {
     const response = await fetch('https://kontests.net/api/v1/at_coder');
     if (!response.ok) {
@@ -224,23 +272,26 @@ const fetchAtCoderEvents = async (): Promise<Event[]> => {
     }
     const contests = await response.json();
     
-    return contests.map((contest: any) => ({
-      id: `ac-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
-      title: contest.name,
-      startTime: new Date(contest.start_time),
-      endTime: new Date(contest.end_time),
-      url: contest.url,
-      platform: 'atcoder',
-      description: `AtCoder contest with a duration of ${contest.duration}.`
-    }));
+    return {
+      events: contests.map((contest: any) => ({
+        id: `ac-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+        title: contest.name,
+        startTime: new Date(contest.start_time),
+        endTime: new Date(contest.end_time),
+        url: contest.url,
+        platform: 'atcoder',
+        description: `AtCoder contest with a duration of ${contest.duration}.`
+      })),
+      usingFallback: false
+    };
   } catch (error) {
     console.error("Error fetching AtCoder events:", error);
-    return getFallbackEvents('atcoder');
+    return { events: getFallbackEvents('atcoder'), usingFallback: true };
   }
 };
 
 // HackerRank API calls (using Kontests API)
-const fetchHackerRankEvents = async (): Promise<Event[]> => {
+const fetchHackerRankEvents = async (): Promise<{ events: Event[], usingFallback: boolean }> => {
   try {
     const response = await fetch('https://kontests.net/api/v1/hacker_rank');
     if (!response.ok) {
@@ -248,23 +299,26 @@ const fetchHackerRankEvents = async (): Promise<Event[]> => {
     }
     const contests = await response.json();
     
-    return contests.map((contest: any) => ({
-      id: `hr-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
-      title: contest.name,
-      startTime: new Date(contest.start_time),
-      endTime: new Date(contest.end_time),
-      url: contest.url,
-      platform: 'hackerrank',
-      description: `HackerRank contest with a duration of ${contest.duration}.`
-    }));
+    return {
+      events: contests.map((contest: any) => ({
+        id: `hr-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
+        title: contest.name,
+        startTime: new Date(contest.start_time),
+        endTime: new Date(contest.end_time),
+        url: contest.url,
+        platform: 'hackerrank',
+        description: `HackerRank contest with a duration of ${contest.duration}.`
+      })),
+      usingFallback: false
+    };
   } catch (error) {
     console.error("Error fetching HackerRank events:", error);
-    return getFallbackEvents('hackerrank');
+    return { events: getFallbackEvents('hackerrank'), usingFallback: true };
   }
 };
 
 // GeeksforGeeks API calls (using Kontests API)
-const fetchGFGEvents = async (): Promise<Event[]> => {
+const fetchGFGEvents = async (): Promise<{ events: Event[], usingFallback: boolean }> => {
   try {
     // For GFG, we might need to filter from a general list
     const response = await fetch('https://kontests.net/api/v1/all');
@@ -273,7 +327,7 @@ const fetchGFGEvents = async (): Promise<Event[]> => {
     }
     const contests = await response.json();
     
-    return contests
+    const gfgContests = contests
       .filter((contest: any) => contest.site === "GeeksforGeeks")
       .map((contest: any) => ({
         id: `gfg-${contest.name.replace(/\s+/g, '-').toLowerCase()}`,
@@ -284,14 +338,19 @@ const fetchGFGEvents = async (): Promise<Event[]> => {
         platform: 'gfg',
         description: `GeeksforGeeks contest with a duration of ${contest.duration}.`
       }));
+    
+    return {
+      events: gfgContests,
+      usingFallback: gfgContests.length === 0 // If no GFG contests found, consider it a failure
+    };
   } catch (error) {
     console.error("Error fetching GFG events:", error);
-    return getFallbackEvents('gfg');
+    return { events: getFallbackEvents('gfg'), usingFallback: true };
   }
 };
 
 // API to fetch events from all platforms
-export const fetchAllEvents = async (): Promise<Event[]> => {
+export const fetchAllEvents = async (): Promise<ApiResponse> => {
   try {
     toast.info("Fetching contests from all platforms...");
     
@@ -307,20 +366,31 @@ export const fetchAllEvents = async (): Promise<Event[]> => {
     
     // Process the results and combine all events
     let allEvents: Event[] = [];
+    let usingFallback = false;
+    const platformsUsingFallback: string[] = [];
+    
+    const platformKeys = ['codeforces', 'leetcode', 'codechef', 'atcoder', 'hackerrank', 'gfg'];
     
     results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
-        allEvents = [...allEvents, ...result.value];
+        allEvents = [...allEvents, ...result.value.events];
+        
+        if (result.value.usingFallback) {
+          usingFallback = true;
+          platformsUsingFallback.push(platformKeys[index]);
+        }
       } else {
         // Log the error but don't fail the entire operation
         const platforms = ['Codeforces', 'LeetCode', 'CodeChef', 'AtCoder', 'HackerRank', 'GeeksforGeeks'];
         console.error(`Error fetching data from ${platforms[index]}:`, result.reason);
         
         // Add fallback data for failed platform
-        const fallbackData = getFallbackEvents(
-          ['codeforces', 'leetcode', 'codechef', 'atcoder', 'hackerrank', 'gfg'][index]
-        );
+        const fallbackData = getFallbackEvents(platformKeys[index]);
         allEvents = [...allEvents, ...fallbackData];
+        
+        // Mark as using fallback
+        usingFallback = true;
+        platformsUsingFallback.push(platformKeys[index]);
         
         // Show info toast that we're using fallback data
         toast.info(`Using sample data for ${platforms[index]} due to API issues.`);
@@ -330,75 +400,82 @@ export const fetchAllEvents = async (): Promise<Event[]> => {
     // Sort all events by start time
     allEvents.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
     
-    return allEvents;
+    return {
+      events: allEvents,
+      usingFallback,
+      platformsUsingFallback
+    };
   } catch (error) {
     console.error("Error fetching events:", error);
-    toast.error("Failed to fetch events. Please try again later.");
+    toast.error("Failed to fetch events. Using sample data instead.");
     
     // Return fallback data for all platforms if everything fails
-    const fallbackData = [
-      ...getFallbackEvents('codeforces'),
-      ...getFallbackEvents('leetcode'),
-      ...getFallbackEvents('codechef'),
-      ...getFallbackEvents('atcoder'),
-      ...getFallbackEvents('hackerrank'),
-      ...getFallbackEvents('gfg')
-    ];
+    const allPlatforms = ['codeforces', 'leetcode', 'codechef', 'atcoder', 'hackerrank', 'gfg'];
+    const fallbackData = allPlatforms.flatMap(platform => getFallbackEvents(platform));
     
-    return fallbackData.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    return {
+      events: fallbackData.sort((a, b) => a.startTime.getTime() - b.startTime.getTime()),
+      usingFallback: true,
+      platformsUsingFallback: allPlatforms
+    };
   }
 };
 
 // API to fetch events from a specific platform
-export const fetchPlatformEvents = async (platform: string): Promise<Event[]> => {
+export const fetchPlatformEvents = async (platform: string): Promise<ApiResponse> => {
   try {
     toast.info(`Fetching ${platform} contests...`);
     
-    let events: Event[] = [];
+    let result: { events: Event[], usingFallback: boolean };
     
     switch (platform) {
       case 'codeforces':
-        events = await fetchCodeforcesEvents();
+        result = await fetchCodeforcesEvents();
         break;
       case 'leetcode':
-        events = await fetchLeetCodeEvents();
+        result = await fetchLeetCodeEvents();
         break;
       case 'codechef':
-        events = await fetchCodeChefEvents();
+        result = await fetchCodeChefEvents();
         break;
       case 'atcoder':
-        events = await fetchAtCoderEvents();
+        result = await fetchAtCoderEvents();
         break;
       case 'hackerrank':
-        events = await fetchHackerRankEvents();
+        result = await fetchHackerRankEvents();
         break;
       case 'gfg':
-        events = await fetchGFGEvents();
+        result = await fetchGFGEvents();
         break;
       default:
         throw new Error(`Unsupported platform: ${platform}`);
     }
     
-    if (events.length === 0) {
-      // If no events were returned, use fallback data
-      events = getFallbackEvents(platform);
-      toast.info(`Using sample data for ${platform} due to API issues.`);
-    }
+    const events = result.events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
     
-    return events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+    return {
+      events,
+      usingFallback: result.usingFallback,
+      platformsUsingFallback: result.usingFallback ? [platform] : []
+    };
   } catch (error) {
     console.error(`Error fetching ${platform} events:`, error);
     toast.error(`Failed to fetch ${platform} events. Using sample data instead.`);
     
     // Return fallback data for this platform
-    return getFallbackEvents(platform);
+    return {
+      events: getFallbackEvents(platform),
+      usingFallback: true,
+      platformsUsingFallback: [platform]
+    };
   }
 };
 
 // Fetch upcoming events for today and next few days
 export const fetchUpcomingEvents = async (days: number = 7): Promise<Event[]> => {
   try {
-    const allEvents = await fetchAllEvents();
+    const result = await fetchAllEvents();
+    const allEvents = result.events;
     
     const now = new Date();
     const futureDate = new Date();
@@ -412,14 +489,8 @@ export const fetchUpcomingEvents = async (days: number = 7): Promise<Event[]> =>
     toast.error("Failed to fetch upcoming events. Using sample data instead.");
     
     // Return fallback data for all platforms but only upcoming ones
-    const fallbackData = [
-      ...getFallbackEvents('codeforces'),
-      ...getFallbackEvents('leetcode'),
-      ...getFallbackEvents('codechef'),
-      ...getFallbackEvents('atcoder'),
-      ...getFallbackEvents('hackerrank'),
-      ...getFallbackEvents('gfg')
-    ];
+    const allPlatforms = ['codeforces', 'leetcode', 'codechef', 'atcoder', 'hackerrank', 'gfg'];
+    const fallbackData = allPlatforms.flatMap(platform => getFallbackEvents(platform));
     
     const now = new Date();
     const futureDate = new Date();
@@ -430,4 +501,3 @@ export const fetchUpcomingEvents = async (days: number = 7): Promise<Event[]> =>
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   }
 };
-
